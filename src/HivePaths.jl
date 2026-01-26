@@ -24,6 +24,16 @@ Extract criterion, partition, and k from Hive-style paths.
 
 # Examples
 ```julia
+
+const schema = HiveSchema(
+    parsers = Dict{String, Function}(
+        "criterion" => identity,
+        "partition" => x -> parse(Int, x),
+        "k"         => x -> parse(Int, x)
+    ),
+    order = ["criterion", "partition", "k"]
+)
+
 parse_hive_path(schema::HiveSchema,"data/binned/criterion=depth_iso/partition=1/data.arrow")
 # → (criterion="depth_iso", partition=1, k=nothing)
 
@@ -84,6 +94,15 @@ Path structure is always: `base_dir/criterion=<criterion>/partition=<partition>[
 
 # Examples
 ```julia
+const schema = HiveSchema(
+    parsers = Dict{String, Function}(
+        "criterion" => identity,
+        "partition" => x -> parse(Int, x),
+        "k"         => x -> parse(Int, x)
+    ),
+    order = ["criterion", "partition", "k"]
+)
+
 build_hive_path(schema::HiveSchema,"data/binned", "data.arrow"; criterion="depth_iso", partition=1)
 # → "data/binned/criterion=depth_iso/partition=1/data.arrow"
 
