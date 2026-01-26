@@ -54,30 +54,38 @@
 
     @testset "Building Logic" begin
         base = "results"
-        file = "params.json"
+        TEST_SCHEMA2 = HiveSchema(
+            Dict{String,Function}(
+                "criterion" => identity,           # String -> String
+                "partition" => x -> parse(Int, x), # String -> Int
+                "k" => x -> parse(Int, x)  # String -> Int
+            ),
+            ["criterion", "partition", "k"], # Enforced order
+            "params.json"
+        )
 
         # 1. Happy Path
         # Note: input order of kwargs shouldn't matter
-        path = build_hive_path(TEST_SCHEMA, base, file; partition=1, k=5, criterion="depth")
+        path = build_hive_path(TEST_SCHEMA2, base; partition=1, k=5, criterion="depth")
 
         # Check standard path separators just in case (Windows/Unix)
         normalized = replace(path, "\\" => "/")
         @test normalized == "results/criterion=depth/partition=1/k=5/params.json"
 
         # 2. Skip Missing/Nothing Values
-        path_missing = build_hive_path(TEST_SCHEMA, base, file; criterion="depth", partition=1, k=nothing)
+        path_missing = build_hive_path(TEST_SCHEMA2, base; criterion="depth", partition=1, k=nothing)
         normalized_missing = replace(path_missing, "\\" => "/")
         @test normalized_missing == "results/criterion=depth/partition=1/params.json"
 
         # 3. Ignore Extra Kwargs (keys not in Schema)
-        path_extra = build_hive_path(TEST_SCHEMA, base, file; criterion="depth", weird_param=999)
+        path_extra = build_hive_path(TEST_SCHEMA2, base; criterion="depth", weird_param=999)
         @test !occursin("weird_param", path_extra)
         @test occursin("criterion=depth", path_extra)
     end
 
     @testset "Round Trip (Build -> Parse)" begin
         # Generate a path
-        generated_path = build_hive_path(TEST_SCHEMA, "tmp", "data.arrow";
+        generated_path = build_hive_path(TEST_SCHEMA, "tmp";
             criterion="manual", partition=99, k=3)
 
         # Immediately parse it back

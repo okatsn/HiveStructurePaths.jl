@@ -117,14 +117,13 @@ build_hive_path(schema::HiveSchema,"plots/voronoi_maps", "criterion=depth_iso.pn
 
 # Arguments
 - `base_dir`: Base directory path
-- `file_name`: File name to append at the end of the path
 - `kwargs`: labels in the path to the file as keyword arguments.
 
 
 # Returns
 Complete path string with Hive-style structure
 """
-function build_hive_path(schema::HiveSchema, base_dir::AbstractString, file_name; kwargs...)
+function build_hive_path(schema::HiveSchema, base_dir::AbstractString; kwargs...)
     # Start with base directory
     path_parts = String[base_dir]
 
@@ -139,7 +138,7 @@ function build_hive_path(schema::HiveSchema, base_dir::AbstractString, file_name
         end
     end
 
-    push!(path_parts, file_name)
+    push!(path_parts, schema.filename)
 
     return joinpath(path_parts...)
 end
