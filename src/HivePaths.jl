@@ -10,11 +10,12 @@ Defines the structure and parsing rules for a Hive file hierarchy.
 struct HiveSchema
     parsers::Dict{String,Function}
     order::Vector{String}
+    filename::String
 end
 
 # Default constructor helper for cleaner syntax
-function HiveSchema(; parsers, order)
-    return HiveSchema(parsers, order)
+function HiveSchema(; parsers, order, filename)
+    return HiveSchema(parsers, order, filename)
 end
 
 """
@@ -142,6 +143,37 @@ function build_hive_path(schema::HiveSchema, base_dir::AbstractString, file_name
 
     return joinpath(path_parts...)
 end
+
+
+# ============================================================================
+# I/O Utilities
+# ============================================================================
+
+"""
+    find_files(dir::AbstractString, target) → Vector{String}
+
+Recursively find all files under a directory.
+
+# Arguments
+- `dir`: Root directory to search
+- `target`: Target filename
+
+# Returns
+Vector of absolute paths to files (sorted)
+"""
+function find_files(dir::AbstractString, target)
+    arrow_files = String[]
+    for (root, dirs, files) in walkdir(dir)
+        for file in files
+            if file == target
+                push!(arrow_files, joinpath(root, file))
+            end
+        end
+    end
+    return sort(arrow_files)
+end
+
+find_files(schema::HiveSchema, dir) = find_files(dir, schema.filename)
 
 
 end
