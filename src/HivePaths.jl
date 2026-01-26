@@ -150,30 +150,59 @@ end
 # ============================================================================
 
 """
-    find_files(dir::AbstractString, target) → Vector{String}
+    find_hive_files(schema::HiveSchema, root_dir::AbstractString;
+                    validate_keys=[], error_if_empty=false) -> Vector{String}
 
-Recursively find all files under a directory.
+Recursively find files that match the schema's filename AND structure.
 
 # Arguments
-- `dir`: Root directory to search
-- `target`: Target filename
+- `validate_keys`: List of keys (e.g. `[:criterion]`) that MUST be present in the path
+  for it to be considered valid.
+- `error_if_empty`: If true, throws error if no matching files are found.
 
 # Returns
-Vector of absolute paths to files (sorted)
+Sorted list of absolute paths.
 """
-function find_files(dir::AbstractString, target)
-    arrow_files = String[]
-    for (root, dirs, files) in walkdir(dir)
-        for file in files
-            if file == target
-                push!(arrow_files, joinpath(root, file))
+function find_hive_files(schema::HiveSchema, root_dir::AbstractString;
+    validate_keys=Symbol[], error_if_empty=false)
+
+    # 1. Safety Check: Directory existence
+    if !isdir(root_dir)
+        error("Directory not found: $root_dir")
+    end
+
+    found_files = String[]
+    target = schema.filename
+
+    # 2. Walk and Filter
+    for (root, dirs, files) in walkdir(root_dir)
+        if target in files
+            full_path = joinpath(root, target)
+
+            # 3. schema-Awareness: Check if this file actually fits the schema
+            # If validate_keys is empty, this just checks if parse crashes,
+            # effectively acting as a loose structure check.
+            try
+                parsed = parse_hive_path(schema, full_path; required_keys=validate_keys)
+
+                # Optional: You could add logic here to check if parsed values are valid
+                # e.g. if parsed.partition is nothing, maybe skip?
+
+                push!(found_files, full_path)
+            catch
+                # If parsing fails (e.g. missing required keys), skip this file.
+                # It might be a backup or a loose file not part of the dataset.
+                continue
             end
         end
     end
-    return sort(arrow_files)
+
+    # 4. Guardrail against silent failures
+    if error_if_empty && isempty(found_files)
+        error("No valid Hive files found in $root_dir matching schema $(schema.filename)")
+    end
+
+    return sort(found_files)
 end
-
-find_files(schema::HiveSchema, dir) = find_files(dir, schema.filename)
-
 
 end
