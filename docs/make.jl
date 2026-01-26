@@ -1,4 +1,4 @@
-using HivePaths
+using HiveStructurePaths
 using Documenter
 # using DocumenterCitations
 # # 1. Uncomment this line and the CitationBibliography line
@@ -7,16 +7,16 @@ using Documenter
 # # Please refer https://juliadocs.org/DocumenterCitations.jl/stable/
 
 
-DocMeta.setdocmeta!(HivePaths, :DocTestSetup, :(using HivePaths); recursive=true)
+DocMeta.setdocmeta!(HiveStructurePaths, :DocTestSetup, :(using HiveStructurePaths); recursive=true)
 
 makedocs(;
-    modules=[HivePaths],
+    modules=[HiveStructurePaths],
     authors="okatsn <okatsn@gmail.com> and contributors",
-    repo="https://github.com/okatsn/HivePaths.jl/blob/{commit}{path}#{line}",
-    sitename="HivePaths.jl",
+    repo="https://github.com/okatsn/HiveStructurePaths.jl/blob/{commit}{path}#{line}",
+    sitename="HiveStructurePaths.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://okatsn.github.io/HivePaths.jl",
+        canonical="https://okatsn.github.io/HiveStructurePaths.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -29,6 +29,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/okatsn/HivePaths.jl",
+    repo="github.com/okatsn/HiveStructurePaths.jl",
     devbranch="main",
 )

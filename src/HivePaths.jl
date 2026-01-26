@@ -1,4 +1,4 @@
-module HivePaths
+module HiveStructurePaths
 
 export HiveSchema, parse_hive_path, build_hive_path, find_hive_files
 

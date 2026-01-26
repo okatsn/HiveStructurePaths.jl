@@ -1,4 +1,4 @@
-@testset "HivePaths Tests" begin
+@testset "HiveStructurePaths Tests" begin
 
     # --- Setup: Define a standard Schema for Seismology ---
     TEST_SCHEMA = HiveSchema(

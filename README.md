@@ -1,20 +1,20 @@
-# HivePaths
+# HiveStructurePaths
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://okatsn.github.io/HivePaths.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://okatsn.github.io/HivePaths.jl/dev/)
-[![Build Status](https://github.com/okatsn/HivePaths.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/okatsn/HivePaths.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/okatsn/HivePaths.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/okatsn/HivePaths.jl)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://okatsn.github.io/HiveStructurePaths.jl/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://okatsn.github.io/HiveStructurePaths.jl/dev/)
+[![Build Status](https://github.com/okatsn/HiveStructurePaths.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/okatsn/HiveStructurePaths.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/okatsn/HiveStructurePaths.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/okatsn/HiveStructurePaths.jl)
 
 <!-- Don't have any of your custom contents above; they won't occur if there is no citation. -->
 
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://okatsn.github.io/HivePaths.jl/stable)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://okatsn.github.io/HivePaths.jl/dev)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://okatsn.github.io/HiveStructurePaths.jl/stable)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://okatsn.github.io/HiveStructurePaths.jl/dev)
 
-HivePaths provides utilities for working with Hive-style partitioned file hierarchies, where data is organized using `key=value` directory structures.
+HiveStructurePaths provides utilities for working with Hive-style partitioned file hierarchies, where data is organized using `key=value` directory structures.
 
 ## Purpose
 
-When managing datasets partitioned across multiple dimensions (e.g., `criterion=depth/partition=1/k=10/data.arrow`), HivePaths helps you:
+When managing datasets partitioned across multiple dimensions (e.g., `criterion=depth/partition=1/k=10/data.arrow`), HiveStructurePaths helps you:
 - **Parse** paths to extract partition metadata
 - **Build** paths with consistent hierarchical ordering
 - **Find** all files matching a specific schema
@@ -24,7 +24,7 @@ Each `HiveSchema` defines one target filename and the hierarchical structure of 
 ## Example
 
 ```julia
-using HivePaths
+using HiveStructurePaths
 
 # Define the schema
 schema = HiveSchema(

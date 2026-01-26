@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = HivePaths
+CurrentModule = HiveStructurePaths
 ```
 
-# HivePaths
+# HiveStructurePaths
 
-Documentation for [HivePaths](https://github.com/okatsn/HivePaths.jl).
+Documentation for [HiveStructurePaths](https://github.com/okatsn/HiveStructurePaths.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [HivePaths]
+Modules = [HiveStructurePaths]
 ```

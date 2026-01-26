@@ -1,6 +1,6 @@
 using Test
 # using TestItems
-using HivePaths
+using HiveStructurePaths
 
 function targetlist(targetexpr::Regex, dir2walk::AbstractString)
     # targetexpr = r"(\.jl)$";
@@ -19,7 +19,7 @@ end
 
 (testfiles, allnames) = targetlist(r"^(?!runtests).*(\.jl)$", "./");
 # pwd() here should be "./test/"
-@testset "HivePaths.jl" begin
+@testset "HiveStructurePaths.jl" begin
     for f in testfiles
         # write test in the file of the same name.
         # E.g., `test/mycode.jl` for testing `src/mycode.jl`.
@@ -29,12 +29,12 @@ end
 
 using Documenter
 @testset "DocTests" begin
-    DocMeta.setdocmeta!(HivePaths, :DocTestSetup, :(using HivePaths); recursive=true)
+    DocMeta.setdocmeta!(HiveStructurePaths, :DocTestSetup, :(using HiveStructurePaths); recursive=true)
     # using the package everywhere in the doc
     # See also https://documenter.juliadocs.org/stable/man/doctests/#Setup-Code
 
 
-    doctest(HivePaths; manual = false) # this makes jldoctest also be tested in a local test
+    doctest(HiveStructurePaths; manual = false) # this makes jldoctest also be tested in a local test
 end
 
 using CompatHelperLocal
