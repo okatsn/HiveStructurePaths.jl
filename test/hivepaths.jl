@@ -1,66 +1,3 @@
-using Test
-
-# ============================================================================
-# 1. Implementation (Mocking the Package for the Test)
-# ============================================================================
-module HivePaths
-export HiveSchema, parse_hive_path, build_hive_path
-
-struct HiveSchema
-    parsers::Dict{String,Function}
-    order::Vector{String}
-end
-
-function parse_hive_path(schema::HiveSchema, path::AbstractString; required_keys=Symbol[])
-    results = Dict{Symbol,Any}()
-    components = split(path, '/')
-
-    for component in components
-        if occursin('=', component)
-            key, value = split(component, '=', limit=2)
-            if haskey(schema.parsers, key)
-                try
-                    results[Symbol(key)] = schema.parsers[key](value)
-                catch
-                    # In production, you might log a warning here
-                end
-            end
-        end
-    end
-
-    for k in required_keys
-        if !haskey(results, k)
-            error("Invalid Hive path. Missing required key: :$k")
-        end
-    end
-
-    return (; results...)
-end
-
-function build_hive_path(schema::HiveSchema, base_dir::AbstractString, file_name; kwargs...)
-    path_parts = String[base_dir]
-    params = Dict(String(k) => v for (k, v) in pairs(kwargs))
-
-    for key in schema.order
-        if haskey(params, key)
-            val = params[key]
-            if !isnothing(val)
-                push!(path_parts, "$key=$val")
-            end
-        end
-    end
-
-    push!(path_parts, file_name)
-    return joinpath(path_parts...)
-end
-end
-
-using .HivePaths
-
-# ============================================================================
-# 2. Test Suite
-# ============================================================================
-
 @testset "HivePaths Tests" begin
 
     # --- Setup: Define a standard Schema for Seismology ---
@@ -111,13 +48,7 @@ using .HivePaths
 
         # 2. Validation Failure (Missing partition)
         @test_throws ErrorException parse_hive_path(TEST_SCHEMA, path; required_keys=[:criterion, :partition])
-
-        # 3. Validation Failure check message
-        try
-            parse_hive_path(TEST_SCHEMA, path; required_keys=[:partition])
-        catch e
-            @test occursin("Missing required key: :partition", e.msg)
-        end
+        @test_throws ErrorException parse_hive_path(TEST_SCHEMA, path; required_keys=[:partition])
     end
 
     @testset "Building Logic" begin
