@@ -64,11 +64,11 @@ function parse_hive_path(schema::HiveSchema, path::AbstractString; required_keys
     for component in components
         if occursin('=', component)
             key, value = split(component, '=', limit=2)
-            if haskey(HIVE_PARSERS, key)
+            if haskey(schema.parsers, key)
                 # KEYNOTE: "Loose Parse, Strict Validate"
                 # - (The Loose Parse part) It is intended to ignore unknown keys because someone might add irrelevant folder
                 # - (The "Strict Validate part") Validate against `required_keys`
-                parser_func = HIVE_PARSERS[key]
+                parser_func = schema.parsers[key]
                 results[Symbol(key)] = parser_func(value)
             end
         end
@@ -131,7 +131,7 @@ function build_hive_path(schema::HiveSchema, base_dir::AbstractString, file_name
     params = Dict{String,Any}(String(k) => v for (k, v) in pairs(kwargs))
 
     # Iterate through the enforced hierarchy order
-    for key in HIVE_ORDER
+    for key in schema.order
         value = get(params, key, nothing)
         if !isnothing(value)
             push!(path_parts, "$key=$value")
