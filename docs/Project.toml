@@ -1,0 +1,3 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+HivePaths = "67cf009d-4aa4-48c9-a112-d5138c970da1"
