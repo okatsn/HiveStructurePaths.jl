@@ -1,32 +1,37 @@
 module HivePaths
 
-# 1. Define Parsers: Maps Hive keys to the function used to parse them
-const HIVE_PARSERS = Dict{String,Function}(
-    "criterion" => string,
-    "partition" => x -> parse(Int, x),
-    "k" => x -> parse(Int, x),
-    # Easy to extend: just add new lines here
-    # "model"   => String
-)
-
-# 2. Define Hierarchy: The strict order for building paths
-const HIVE_ORDER = ["criterion", "partition", "k"]
+export HiveSchema, parse_hive_path, build_hive_path
 
 """
-    parse_hive_path(path::AbstractString; required_keys=[]) → NamedTuple
+    HiveSchema(parsers::Dict, order::Vector)
+
+Defines the structure and parsing rules for a Hive file hierarchy.
+"""
+struct HiveSchema
+    parsers::Dict{String,Function}
+    order::Vector{String}
+end
+
+# Default constructor helper for cleaner syntax
+function HiveSchema(; parsers, order)
+    return HiveSchema(parsers, order)
+end
+
+"""
+    parse_hive_path(schema::HiveSchema,path::AbstractString; required_keys=[]) → NamedTuple
 
 Extract criterion, partition, and k from Hive-style paths.
 
 # Examples
 ```julia
-parse_hive_path("data/binned/criterion=depth_iso/partition=1/data.arrow")
+parse_hive_path(schema::HiveSchema,"data/binned/criterion=depth_iso/partition=1/data.arrow")
 # → (criterion="depth_iso", partition=1, k=nothing)
 
-parse_hive_path("data/cluster_assignments/criterion=depth_iso/partition=2/k=10/data.arrow")
+parse_hive_path(schema::HiveSchema,"data/cluster_assignments/criterion=depth_iso/partition=2/k=10/data.arrow")
 # → (criterion="depth_iso", partition=2, k=10)
 
 # Validate required keys
-parse_hive_path("data/binned/criterion=depth_iso/partition=1/data.arrow"; required_keys=["criterion", "partition"])
+parse_hive_path(schema::HiveSchema,"data/binned/criterion=depth_iso/partition=1/data.arrow"; required_keys=["criterion", "partition"])
 # → (criterion="depth_iso", partition=1, k=nothing)
 ```
 
@@ -40,7 +45,7 @@ NamedTuple with extracted values (nothing for missing fields)
 # Throws
 - `ErrorException` if any required_keys are missing from the path
 """
-function parse_hive_path(path::AbstractString; required_keys=[])
+function parse_hive_path(schema::HiveSchema, path::AbstractString; required_keys=[])
     results = Dict{Symbol,Any}()
 
     # Split path into components
@@ -71,7 +76,7 @@ function parse_hive_path(path::AbstractString; required_keys=[])
 end
 
 """
-    build_hive_path(base_dir::AbstractString, file_name; kwargs...) → String
+    build_hive_path(schema::HiveSchema,base_dir::AbstractString, file_name; kwargs...) → String
 
 Construct Hive-style output path with consistent ordering.
 
@@ -79,14 +84,14 @@ Path structure is always: `base_dir/criterion=<criterion>/partition=<partition>[
 
 # Examples
 ```julia
-build_hive_path("data/binned", "data.arrow"; criterion="depth_iso", partition=1)
+build_hive_path(schema::HiveSchema,"data/binned", "data.arrow"; criterion="depth_iso", partition=1)
 # → "data/binned/criterion=depth_iso/partition=1/data.arrow"
 
-build_hive_path("data/cluster_assignments", "data.arrow"; partition=2, criterion="depth_iso", k=10)
+build_hive_path(schema::HiveSchema,"data/cluster_assignments", "data.arrow"; partition=2, criterion="depth_iso", k=10)
 # → "data/cluster_assignments/criterion=depth_iso/partition=2/k=10/data.arrow"
 # Noted that the order is consistent with the previous one; the order of `kwargs` does not matter.
 
-build_hive_path("plots/voronoi_maps", "criterion=depth_iso.png"; criterion="depth_iso", partition=1, k=8)
+build_hive_path(schema::HiveSchema,"plots/voronoi_maps", "criterion=depth_iso.png"; criterion="depth_iso", partition=1, k=8)
 # → "plots/voronoi_maps/criterion=depth_iso/partition=1/k=8/criterion=depth_iso.png"
 ```
 
@@ -99,7 +104,7 @@ build_hive_path("plots/voronoi_maps", "criterion=depth_iso.png"; criterion="dept
 # Returns
 Complete path string with Hive-style structure
 """
-function build_hive_path(base_dir::AbstractString, file_name; kwargs...)
+function build_hive_path(schema::HiveSchema, base_dir::AbstractString, file_name; kwargs...)
     # Start with base directory
     path_parts = String[base_dir]
 
