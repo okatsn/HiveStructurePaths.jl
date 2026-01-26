@@ -1,11 +1,16 @@
 module HivePaths
 
-export HiveSchema, parse_hive_path, build_hive_path
+export HiveSchema, parse_hive_path, build_hive_path, find_hive_files
 
 """
-    HiveSchema(parsers::Dict, order::Vector)
+    HiveSchema(; parsers::Dict, order::Vector, filename::String)
 
 Defines the structure and parsing rules for a Hive file hierarchy.
+
+# Fields
+- `parsers`: Dict mapping key names to parsing functions
+- `order`: Vector defining the hierarchical order of keys in paths
+- `filename`: The target filename that appears in all Hive paths (one per schema)
 """
 struct HiveSchema
     parsers::Dict{String,Function}
@@ -19,9 +24,9 @@ function HiveSchema(; parsers, order, filename)
 end
 
 """
-    parse_hive_path(schema::HiveSchema,path::AbstractString; required_keys=[]) → NamedTuple
+    parse_hive_path(schema::HiveSchema, path::AbstractString; required_keys=[]) → NamedTuple
 
-Extract criterion, partition, and k from Hive-style paths.
+Extract key-value pairs from Hive-style paths according to the schema.
 
 # Examples
 ```julia
@@ -87,11 +92,12 @@ function parse_hive_path(schema::HiveSchema, path::AbstractString; required_keys
 end
 
 """
-    build_hive_path(schema::HiveSchema,base_dir::AbstractString, file_name; kwargs...) → String
+    build_hive_path(schema::HiveSchema, base_dir::AbstractString; kwargs...) → String
 
 Construct Hive-style output path with consistent ordering.
 
-Path structure is always: `base_dir/criterion=<criterion>/partition=<partition>[/k=<k>]/file_name`
+Path structure follows schema order: `base_dir/key1=<val1>/key2=<val2>/.../filename`
+where `filename` comes from `schema.filename`.
 
 # Examples
 ```julia
@@ -101,23 +107,21 @@ const schema = HiveSchema(
         "partition" => x -> parse(Int, x),
         "k"         => x -> parse(Int, x)
     ),
-    order = ["criterion", "partition", "k"]
+    order = ["criterion", "partition", "k"],
+    filename = "data.arrow"
 )
 
-build_hive_path(schema::HiveSchema,"data/binned", "data.arrow"; criterion="depth_iso", partition=1)
+build_hive_path(schema, "data/binned"; criterion="depth_iso", partition=1)
 # → "data/binned/criterion=depth_iso/partition=1/data.arrow"
 
-build_hive_path(schema::HiveSchema,"data/cluster_assignments", "data.arrow"; partition=2, criterion="depth_iso", k=10)
+build_hive_path(schema, "data/cluster_assignments"; partition=2, criterion="depth_iso", k=10)
 # → "data/cluster_assignments/criterion=depth_iso/partition=2/k=10/data.arrow"
-# Noted that the order is consistent with the previous one; the order of `kwargs` does not matter.
-
-build_hive_path(schema::HiveSchema,"plots/voronoi_maps", "criterion=depth_iso.png"; criterion="depth_iso", partition=1, k=8)
-# → "plots/voronoi_maps/criterion=depth_iso/partition=1/k=8/criterion=depth_iso.png"
+# Note that the order is consistent with the previous one; the order of `kwargs` does not matter.
 ```
 
 # Arguments
 - `base_dir`: Base directory path
-- `kwargs`: labels in the path to the file as keyword arguments.
+- `kwargs`: Key-value pairs matching schema keys
 
 
 # Returns
@@ -183,9 +187,6 @@ function find_hive_files(schema::HiveSchema, root_dir::AbstractString;
             # effectively acting as a loose structure check.
             try
                 parsed = parse_hive_path(schema, full_path; required_keys=validate_keys)
-
-                # Optional: You could add logic here to check if parsed values are valid
-                # e.g. if parsed.partition is nothing, maybe skip?
 
                 push!(found_files, full_path)
             catch

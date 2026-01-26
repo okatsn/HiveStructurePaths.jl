@@ -7,76 +7,48 @@
 
 <!-- Don't have any of your custom contents above; they won't occur if there is no citation. -->
 
-## Documentation Badge is here:
-
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://okatsn.github.io/HivePaths.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://okatsn.github.io/HivePaths.jl/dev)
 
-> See [Documenter.jl: Documentation Versions](https://documenter.juliadocs.org/dev/man/hosting/#Documentation-Versions)
+HivePaths provides utilities for working with Hive-style partitioned file hierarchies, where data is organized using `key=value` directory structures.
 
-## Introduction
+## Purpose
 
-This is a julia package created using `okatsn`'s preference, and this package is expected to be registered to [okatsn/OkRegistry](https://github.com/okatsn/OkRegistry) for CIs to work properly.
+When managing datasets partitioned across multiple dimensions (e.g., `criterion=depth/partition=1/k=10/data.arrow`), HivePaths helps you:
+- **Parse** paths to extract partition metadata
+- **Build** paths with consistent hierarchical ordering
+- **Find** all files matching a specific schema
 
-!!! note Checklist
+Each `HiveSchema` defines one target filename and the hierarchical structure of its enclosing directories.
 
-    - [ ] Create an empty repository (namely, `https://github.com/okatsn/HivePaths.jl.git`) on github, and push the local to origin. See [connecting to remote](#tips-for-connecting-to-remote).
-    - [ ] Add `ACCESS_OKREGISTRY` secret in the settings of this repository on Github, or delete both `register.yml` and `TagBot.yml` in `/.github/workflows/`. See [Auto-Registration](#auto-registration).
-    - [ ] To keep `Manifest.toml` being tracked, delete the lines in `.gitignore`.
-    - [ ] You might like to register `v0.0.0` in order to `pkg> dev HivePaths` in your environment.
+## Example
 
+```julia
+using HivePaths
 
-### Go to [OkPkgTemplates](https://github.com/okatsn/OkPkgTemplates.jl) for more information
+# Define the schema
+schema = HiveSchema(
+    parsers = Dict{String, Function}(
+        "criterion" => identity,
+        "partition" => x -> parse(Int, x),
+        "k"         => x -> parse(Int, x)
+    ),
+    order = ["criterion", "partition", "k"],
+    filename = "data.arrow"
+)
 
-- [How TagBot works and trouble shooting](https://github.com/okatsn/OkPkgTemplates.jl#tagbot)
-- [Use of Documenter](https://github.com/okatsn/OkPkgTemplates.jl#use-of-documenter)
+# Build paths
+path = build_hive_path(schema, "results"; criterion="depth", partition=2, k=5)
+# → "results/criterion=depth/partition=2/k=5/data.arrow"
 
-## References
+# Parse paths
+parsed = parse_hive_path(schema, path; required_keys=["criterion", "partition"])
+# → (criterion="depth", partition=2, k=5)
 
-### For a remote of different name
+# Find all matching files
+files = find_hive_files(schema, "results"; validate_keys=["criterion"])
+# → ["results/criterion=depth/partition=1/k=3/data.arrow",
+#    "results/criterion=depth/partition=2/k=5/data.arrow", ...]
+```
 
-Example workflow
-
-- Create `YourPackage.jl` with `OkPkgTemplates`
-- Create a new Repo on GitHub, saying `Hello-World`
-- Go to local path of YourPackage.jl, `git remote set-url origin https://<git-repo>/Hello-World.git`.
-- Use find all and Replace "YourPackage.jl" with "Hello-World" **EXCEPT** those **NOT** URL such as:
-  - `@testset "YourPackage.jl"` in `/test/runtest.jl`
-  - The `sitename` field in `/docs/make.jl`
-
-### Auto-Registration
-
-- You have to add `ACCESS_OKREGISTRY` to the secret under the remote repo (e.g., https://github.com/okatsn/HivePaths.jl).
-- `ACCESS_OKREGISTRY` allows `CI.yml` to automatically register/update this package to [okatsn/OkRegistry](https://github.com/okatsn/OkRegistry).
-
-### Test
-#### How to add a new test
-
-Add `.jl` files (that has `@testset` block or `@test` inside) in `test/`; `test/runtests.jl` will automatically `include` all the `.jl` scripts there.
-
-#### Test docstring
-
-`doctest` is executed at the following **two** places:
-
-1. In `CI.yml`, `jobs: test: ` that runs `test/runtests.jl`
-2. In `CI.yml`, `jobs: docs: ` that runs directly on bash.
-
-It is no harm to run both, but you can manually delete either.
-Of course, `pkg> test` will also run `doctest` since it runs also `test/runtests.jl`.
-
-### Tips for connecting to remote
-
-Connect to remote:
-
-1. Switch to the local directory of this project (HivePaths)
-2. Add an empty repo HivePaths(.jl) on github (without anything!)
-3. `git push origin main`
-
-- It can be quite tricky, see https://discourse.julialang.org/t/upload-new-package-to-github/56783
-More reading
-Pkg's Artifact that manage an external dataset as a package
-- https://pkgdocs.julialang.org/v1/artifacts/
-- a provider for reposit data: https://github.com/sdobber/FA_data
-
-
-This package is create on 2026-01-26.
+See the docstrings for detailed API documentation.
