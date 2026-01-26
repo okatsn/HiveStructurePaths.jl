@@ -1,7 +1,7 @@
 name = "HivePaths"
 uuid = "67cf009d-4aa4-48c9-a112-d5138c970da1"
 authors = ["okatsn <okatsn@gmail.com> and contributors"]
-version = "0.0.3"
+version = "0.0.4"
 
 [compat]
 julia = "1.10"
