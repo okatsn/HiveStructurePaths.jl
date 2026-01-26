@@ -7,7 +7,8 @@
             "partition" => x -> parse(Int, x), # String -> Int
             "k" => x -> parse(Int, x)  # String -> Int
         ),
-        ["criterion", "partition", "k"] # Enforced order
+        ["criterion", "partition", "k"], # Enforced order
+        "data.arrow"
     )
 
     @testset "Parsing Logic" begin
